@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>简易HTML代码渲染工具</title>
+    <link rel="icon" href="logo.png" type="image/x-icon">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+            padding-left: 20px;
+        }
+        .input-container {
+            margin-bottom: 20px;
+        }
+        textarea {
+            width: 1450px;
+            height: 500px;
+            font-size: 16px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            resize: none;
+            text-align: left;
+            overflow-y: auto;
+            background-color: #f9f9f9;
+        }
+        .code {
+            background-color: #eef;
+            padding: 5px;
+            border-radius: 3px;
+        }
+        .button-container {
+            margin-bottom: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            background-color: #4CAF50;
+            color: white;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .checkbox-container {
+            margin-bottom: 20px;
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/js-beautify/1.14.0/beautify-html.min.js"></script>
+</head>
+<body>
+    <div class="button-container">
+        <button id="redirectButton">渲染页面</button>
+        <button id="clearButton">清空输入</button>
+        <button id="formatButton">格式化代码</button>
+    </div>
+    <div class="checkbox-container">
+        <label>
+            <input type="checkbox" id="defaultHighlight"> 默认开启高亮模式
+        </label>
+    </div>
+    <div class="input-container">
+        <textarea id="userInput" placeholder="在这里输入HTML代码..."></textarea>
+    </div>
+    
+    <script>
+        document.getElementById('redirectButton').addEventListener('click', function() {
+            const input = document.getElementById('userInput').value;
+            const defaultHighlight = document.getElementById('defaultHighlight').checked;
+            if (input) {
+                const newWindow = window.open();
+                const baseHTML = `
+                    <!DOCTYPE html>
+                    <html lang="zh">
+                    <head>
+                        <meta charset="UTF-8">
+                        <title>渲染的HTML代码</title>
+                        <style>
+                            body {
+                                font-family: Arial, sans-serif;
+                                margin: 20px;
+                                padding-left: 20px;
+                                padding-right: 20px;
+                            }
+                            .fixed-header {
+                                position: fixed;
+                                top: 0;
+                                left: 0;
+                                width: 100%;
+                                background-color: white;
+                                z-index: 1000;
+                                padding: 10px 0;
+                                box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+                            }
+                            .fixed-header button {
+                                margin-left: 20px;
+                            }
+                            .highlight-button {
+                                padding: 10px 20px;
+                                font-size: 16px;
+                                border: none;
+                                border-radius: 5px;
+                                background-color: #4CAF50;
+                                color: white;
+                                cursor: pointer;
+                                margin-bottom: 20px;
+                            }
+                            .highlight-button:hover {
+                                background-color: #45a049;
+                            }
+                            .refresh-button {
+                                padding: 10px 20px;
+                                font-size: 16px;
+                                border: none;
+                                border-radius: 5px;
+                                background-color: #2196F3;
+                                color: white;
+                                cursor: pointer;
+                            }
+                            .refresh-button:hover {
+                                background-color: #1976D2;
+                            }
+                            span.highlight {
+                                color: red;
+                            }
+                            td {
+                                position: relative;
+                            }
+                            p {
+                                word-wrap: break-word;
+                            }
+                            .content {
+                                margin-top: 100px;
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="fixed-header">
+                            <button class="highlight-button" id="toggleHighlightButton">高亮模式</button>
+                            <span id="highlightStatus">高亮模式：${defaultHighlight ? '开启' : '关闭'}</span>
+                            <button class="highlight-button" id="undoButton" disabled>撤销高亮</button>
+                            <button class="refresh-button" id="refreshButton">重新加载</button>
+                        </div>
+                        <div class="content" id="contentArea">
+                            <div style="overflow-x:auto;">${input}</div>
+                        </div>
+                        <script>
+                            (function() {
+                                let highlightHistory = [];
+                                let highlightMode = ${defaultHighlight};
+
+                                document.getElementById('highlightStatus').innerText = highlightMode ? '高亮模式：开启' : '高亮模式：关闭';
+
+                                function handleMouseUp() {
+                                    if (highlightMode) {
+                                        const selection = window.getSelection();
+                                        if (!selection.isCollapsed) {
+                                            let range = selection.getRangeAt(0);
+                                            const commonAncestor = range.commonAncestorContainer;
+                                            let spans = [];
+                                            
+                                            if (commonAncestor.nodeType === Node.ELEMENT_NODE) {
+                                                spans = Array.from(commonAncestor.querySelectorAll('span.highlight'));
+                                            } else {
+                                                spans = Array.from(commonAncestor.parentElement.querySelectorAll('span.highlight'));
+                                            }
+
+                                            let existingHighlight = false;
+                                            spans.forEach(span => {
+                                                if (range.intersectsNode(span)) {
+                                                    existingHighlight = true;
+                                                }
+                                            });
+
+                                            if (existingHighlight) {
+                                                alert('选中的文本存在已经被高亮显示的内容。');
+                                            } else {
+                                                const span = document.createElement('span');
+                                                span.className = 'highlight';
+                                                span.appendChild(range.extractContents());
+                                                range.insertNode(span);
+                                                highlightHistory.push(span);
+                                                document.getElementById('undoButton').disabled = false;
+                                            }
+
+                                            selection.removeAllRanges();
+                                        }
+                                    }
+                                }
+
+                                document.getElementById('toggleHighlightButton').addEventListener('click', function() {
+                                    highlightMode = !highlightMode;
+                                    document.getElementById('highlightStatus').innerText = highlightMode ? '高亮模式：开启' : '高亮模式：关闭';
+                                    alert(highlightMode ? '高亮模式已启用，您可以开始选择文本来进行高亮显示。' : '高亮模式已禁用。');
+                                });
+
+                                document.addEventListener('mouseup', handleMouseUp);
+
+                                document.getElementById('undoButton').addEventListener('click', function() {
+                                    if (highlightHistory.length > 0) {
+                                        const lastHighlight = highlightHistory.pop();
+                                        const parent = lastHighlight.parentNode;
+
+                                        while (lastHighlight.firstChild) {
+                                            parent.insertBefore(lastHighlight.firstChild, lastHighlight);
+                                        }
+                                        parent.removeChild(lastHighlight);
+
+                                        if (highlightHistory.length === 0) {
+                                            this.disabled = true;
+                                        }
+                                    }
+                                });
+
+                                document.getElementById('refreshButton').addEventListener('click', function() {
+                                    document.getElementById('contentArea').innerHTML = \`<div style="overflow-x:auto;">\${initialHTML}\</div>\`;
+                                    highlightHistory = [];
+                                    document.getElementById('undoButton').disabled = true;
+                                });
+                            })();
+                        <\/script>
+                    </body>
+                    </html>
+                `;
+                newWindow.document.write(baseHTML);
+                newWindow.document.close();
+            } else {
+                alert('请输入HTML代码！');
+            }
+        });
+
+        document.getElementById('clearButton').addEventListener('click', function() {
+            document.getElementById('userInput').value = '';
+        });
+
+        document.getElementById('formatButton').addEventListener('click', function() {
+            const input = document.getElementById('userInput').value;
+            const formatted = formatHTML(input);
+            document.getElementById('userInput').value = formatted;
+        });
+
+        function formatHTML(html) {
+            return html_beautify(html, {
+                indent_size: 4,
+                space_in_empty_paren: true
+            });
+        }
+    </script>
+</body>
+</html>
