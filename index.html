@@ -160,6 +160,8 @@
                             <div style="overflow-x:auto;">${input}</div>
                         </div>
                         <script>
+                            const initialHTML = \`${input}\`;
+
                             (function() {
                                 let highlightHistory = [];
                                 let highlightMode = ${defaultHighlight};
@@ -206,7 +208,7 @@
                                 document.getElementById('toggleHighlightButton').addEventListener('click', function() {
                                     highlightMode = !highlightMode;
                                     document.getElementById('highlightStatus').innerText = highlightMode ? '高亮模式：开启' : '高亮模式：关闭';
-                                    alert(highlightMode ? '高亮模式已启用，您可以开始选择文本来进行高亮显示。' : '高亮模式已禁用。');
+                                    alert(highlightMode ? '高亮模式已启用，您可以开始选择文本来进行高亮显示。' : '高亮模式已关闭。');
                                 });
 
                                 document.addEventListener('mouseup', handleMouseUp);
