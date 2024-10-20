@@ -148,6 +148,12 @@
                             .content {
                                 margin-top: 100px;
                             }
+                            .highlight-warning {
+                                color: orange;
+                                display: none; /* 默认隐藏 */
+                                margin-left: 20px;
+                                font-weight: bold;
+                            }
                         </style>
                     </head>
                     <body>
@@ -156,6 +162,7 @@
                             <span id="highlightStatus">高亮模式：${defaultHighlight ? '开启' : '关闭'}</span>
                             <button class="highlight-button" id="undoButton" disabled>撤销高亮</button>
                             <button class="refresh-button" id="refreshButton">重新加载</button>
+                            <div class="highlight-warning" id="highlightWarning">为了避免渲染时出现多余换行符/空格符，请避免多行划取。</div>
                         </div>
                         <div class="content" id="contentArea">
                             <div style="overflow-x:auto;">${input}</div>
@@ -168,6 +175,13 @@
                                 let highlightMode = ${defaultHighlight};
 
                                 document.getElementById('highlightStatus').innerText = highlightMode ? '高亮模式：开启' : '高亮模式：关闭';
+                                const highlightWarning = document.getElementById('highlightWarning');
+
+                                function updateHighlightWarning() {
+                                    highlightWarning.style.display = highlightMode ? 'block' : 'none';
+                                }
+
+                                updateHighlightWarning(); // 初始更新
 
                                 function handleMouseUp() {
                                     if (highlightMode) {
@@ -209,6 +223,7 @@
                                 document.getElementById('toggleHighlightButton').addEventListener('click', function() {
                                     highlightMode = !highlightMode;
                                     document.getElementById('highlightStatus').innerText = highlightMode ? '高亮模式：开启' : '高亮模式：关闭';
+                                    updateHighlightWarning(); // 更新提示信息
                                     alert(highlightMode ? '高亮模式已启用，您可以开始选择文本来进行高亮显示。' : '高亮模式已关闭。');
                                 });
 
